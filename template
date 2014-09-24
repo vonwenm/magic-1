@@ -1,0 +1,72 @@
+package model
+
+import (
+	"fmt"
+	"service/config"
+	"strings"
+	"time"
+	"code.google.com/p/log4go"
+)
+
+const (
+	tb{{.Name}}       = "{{.name}}"
+	sql{{.Name}}Get       = "SELECT {{fill .fieldPriNames "" ""}} from `" + tb{{.Name}} + "` WHERE {{.priName}}=?"
+	sql{{.Name}}GetList   = "SELECT {{fill .fieldPriNames "" ""}} from `" + tb{{.Name}} + "` LIMIT ?, ?"
+	sql{{.Name}}Insert    = "INSERT INTO `" + tb{{.Name}} + "` ({{fill .fieldNames "" ""}}) VALUES ({{genNumStr .count "?" ", "}})"
+	sql{{.Name}}Update    = "UPDATE `" + tb{{.Name}} + "` SET {{fill .fieldNames "" "=?"}} WHERE {{.priName}}=?"
+	sql{{.Name}}Delete    = "DELETE FROM  `" + tb{{.Name}} + "` WHERE {{.priName}}=?"
+)
+
+type {{.Name}} struct {
+{{range .fields}}    {{.fName}} {{.fType}} {{.sep}}{{end}}
+}
+
+func (this *{{.Name}}) Get({{.priName}} {{.priType}}) error {
+	if config.Debug {
+		log4go.Debug(fmt.Sprintf(strings.Replace(sql{{.Name}}Get, "?", "%v", -1), {{.priName}}))
+	}
+	row := mysqlDB.QueryRow(sql{{.Name}}Get, {{.priName}})
+	err = row.Scan({{fill .FieldPriNames "&this." ""}})
+	return err
+}
+
+func (this *{{.Name}}) GetList(index, limit int) ([]*{{.Name}}, error) {
+	if config.Debug {
+		log4go.Debug(fmt.Sprintf(strings.Replace(sql{{.Name}}GetList, "?", "%v", -1), index, limit))
+	}
+	rows, err := mysqlDB.Query(sql{{.Name}}GetList, index, limit)
+	if err != nil {
+		return nil, err
+	}
+	list := make([]*{{.Name}}, 0)
+	for rows.Next() {
+		m := {{.Name}}{}
+		rows.Scan({{fill .FieldPriNames "&m." ""}})
+		list = append(list, &m)
+	}
+	return list, err
+}
+
+func (this *{{.Name}}) Insert() error {
+	if config.Debug {
+		log4go.Debug(fmt.Sprintf(strings.Replace(sql{{.Name}}Insert, "?", "%v", -1), {{fill .FieldNames "this." ""}}))
+	}
+	_, err = mysqlDB.Exec(sql{{.Name}}Insert, {{fill .FieldNames "this." ""}})
+	return err
+}
+
+func (this *{{.Name}}) Update() error {
+	if config.Debug {
+		log4go.Debug(fmt.Sprintf(strings.Replace(sql{{.Name}}Update, "?", "%v", -1), {{fill .FieldNames "this." ""}}, this.{{.PriName}}))
+	}
+	_, err = mysqlDB.Exec(sql{{.Name}}Update, {{fill .FieldNames "this." ""}}, this.{{.PriName}})
+	return err
+}
+
+func (this *{{.Name}}) Delete() error {
+	if config.Debug {
+		log4go.Debug(fmt.Sprintf(strings.Replace(sql{{.Name}}Delete, "?", "%v", -1), this.{{.PriName}}))
+	}
+	_, err = mysqlDB.Exec(sql{{.Name}}Delete, this.{{.PriName}})
+	return err
+}
