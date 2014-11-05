@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	dsn          = "test:test@tcp(127.0.0.1:3306)/customer_service?timeout=3s&parseTime=true&loc=Local&charset=utf8"
+	dsn          = "test:test@tcp(vm:3306)/demo?timeout=3s&parseTime=true&loc=Local&charset=utf8"
 	outPut       = "./model"
 	suffix       = ".go"
 	templateFile = "./template"
@@ -45,7 +45,7 @@ func init() {
 	}
 
 	// mkdir outPut dir
-	os.Mkdir(outPut, 0644)
+	os.Mkdir(outPut, 0755)
 
 	// template
 	funcMap["fill"] = fill
@@ -75,13 +75,13 @@ func main() {
 		// get tables
 		var name string
 		rows.Scan(&name)
-		files[name], err = os.Create(filepath.Join(outPut, name+suffix))
+		files[name], err = os.OpenFile(filepath.Join(outPut, name+suffix), os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
-			log.Println("os.Create(%v) error(%v)", name, err)
+			log.Printf("os.OpenFile(%v) error(%v)", name+suffix, err)
 		}
 
 		// get table members
-		cmd = fmt.Sprintf("desc %s", name)
+		cmd = fmt.Sprintf("desc `%s`", name)
 		r, err := db.Query(cmd)
 		if err != nil {
 			log.Printf("db.Query(%v) error(%v)", cmd, err)
@@ -160,7 +160,7 @@ func transferType(str string) string {
 		s = "int"
 	case "float", "double", "decimal":
 		s = "float64"
-	case "timestamp":
+	case "timestamp", "datetime":
 		s = "time.Time"
 	case "binary", "varbinary":
 		s = "[]byte"
