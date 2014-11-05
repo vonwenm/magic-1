@@ -2,7 +2,7 @@ package model
 
 import (
 	"fmt"
-	"service/config"
+	"demo/config"
 	"strings"
 	"time"
 	"github.com/yzw/logs"
@@ -22,7 +22,7 @@ type {{.Name}} struct {
 }
 
 func (this *{{.Name}}) Get({{.priName}} {{.priType}}) error {
-	if config.Debug {
+	if config.AppConfig.Debug {
 		logs.Debug(fmt.Sprintf(strings.Replace(sql{{.Name}}Get, "?", "%v", -1), {{.priName}}))
 	}
 	row := mysqlDB.QueryRow(sql{{.Name}}Get, {{.priName}})
@@ -31,7 +31,7 @@ func (this *{{.Name}}) Get({{.priName}} {{.priType}}) error {
 }
 
 func (this *{{.Name}}) GetList(index, limit int) ([]*{{.Name}}, error) {
-	if config.Debug {
+	if config.AppConfig.Debug {
 		logs.Debug(fmt.Sprintf(strings.Replace(sql{{.Name}}GetList, "?", "%v", -1), index, limit))
 	}
 	rows, err := mysqlDB.Query(sql{{.Name}}GetList, index, limit)
@@ -48,7 +48,7 @@ func (this *{{.Name}}) GetList(index, limit int) ([]*{{.Name}}, error) {
 }
 
 func (this *{{.Name}}) Insert() error {
-	if config.Debug {
+	if config.AppConfig.Debug {
 		logs.Debug(fmt.Sprintf(strings.Replace(sql{{.Name}}Insert, "?", "%v", -1), {{fill .FieldNames "this." ""}}))
 	}
 	_, err = mysqlDB.Exec(sql{{.Name}}Insert, {{fill .FieldNames "this." ""}})
@@ -56,7 +56,7 @@ func (this *{{.Name}}) Insert() error {
 }
 
 func (this *{{.Name}}) Update() error {
-	if config.Debug {
+	if config.AppConfig.Debug {
 		logs.Debug(fmt.Sprintf(strings.Replace(sql{{.Name}}Update, "?", "%v", -1), {{fill .FieldNames "this." ""}}, this.{{.PriName}}))
 	}
 	_, err = mysqlDB.Exec(sql{{.Name}}Update, {{fill .FieldNames "this." ""}}, this.{{.PriName}})
@@ -64,7 +64,7 @@ func (this *{{.Name}}) Update() error {
 }
 
 func (this *{{.Name}}) Delete() error {
-	if config.Debug {
+	if config.AppConfig.Debug {
 		logs.Debug(fmt.Sprintf(strings.Replace(sql{{.Name}}Delete, "?", "%v", -1), this.{{.PriName}}))
 	}
 	_, err = mysqlDB.Exec(sql{{.Name}}Delete, this.{{.PriName}})
