@@ -5,7 +5,7 @@ import (
 	"service/config"
 	"strings"
 	"time"
-	"code.google.com/p/log4go"
+	"github.com/yzw/logs"
 )
 
 const (
@@ -23,7 +23,7 @@ type {{.Name}} struct {
 
 func (this *{{.Name}}) Get({{.priName}} {{.priType}}) error {
 	if config.Debug {
-		log4go.Debug(fmt.Sprintf(strings.Replace(sql{{.Name}}Get, "?", "%v", -1), {{.priName}}))
+		logs.Debug(fmt.Sprintf(strings.Replace(sql{{.Name}}Get, "?", "%v", -1), {{.priName}}))
 	}
 	row := mysqlDB.QueryRow(sql{{.Name}}Get, {{.priName}})
 	err = row.Scan({{fill .FieldPriNames "&this." ""}})
@@ -32,7 +32,7 @@ func (this *{{.Name}}) Get({{.priName}} {{.priType}}) error {
 
 func (this *{{.Name}}) GetList(index, limit int) ([]*{{.Name}}, error) {
 	if config.Debug {
-		log4go.Debug(fmt.Sprintf(strings.Replace(sql{{.Name}}GetList, "?", "%v", -1), index, limit))
+		logs.Debug(fmt.Sprintf(strings.Replace(sql{{.Name}}GetList, "?", "%v", -1), index, limit))
 	}
 	rows, err := mysqlDB.Query(sql{{.Name}}GetList, index, limit)
 	if err != nil {
@@ -49,7 +49,7 @@ func (this *{{.Name}}) GetList(index, limit int) ([]*{{.Name}}, error) {
 
 func (this *{{.Name}}) Insert() error {
 	if config.Debug {
-		log4go.Debug(fmt.Sprintf(strings.Replace(sql{{.Name}}Insert, "?", "%v", -1), {{fill .FieldNames "this." ""}}))
+		logs.Debug(fmt.Sprintf(strings.Replace(sql{{.Name}}Insert, "?", "%v", -1), {{fill .FieldNames "this." ""}}))
 	}
 	_, err = mysqlDB.Exec(sql{{.Name}}Insert, {{fill .FieldNames "this." ""}})
 	return err
@@ -57,7 +57,7 @@ func (this *{{.Name}}) Insert() error {
 
 func (this *{{.Name}}) Update() error {
 	if config.Debug {
-		log4go.Debug(fmt.Sprintf(strings.Replace(sql{{.Name}}Update, "?", "%v", -1), {{fill .FieldNames "this." ""}}, this.{{.PriName}}))
+		logs.Debug(fmt.Sprintf(strings.Replace(sql{{.Name}}Update, "?", "%v", -1), {{fill .FieldNames "this." ""}}, this.{{.PriName}}))
 	}
 	_, err = mysqlDB.Exec(sql{{.Name}}Update, {{fill .FieldNames "this." ""}}, this.{{.PriName}})
 	return err
@@ -65,7 +65,7 @@ func (this *{{.Name}}) Update() error {
 
 func (this *{{.Name}}) Delete() error {
 	if config.Debug {
-		log4go.Debug(fmt.Sprintf(strings.Replace(sql{{.Name}}Delete, "?", "%v", -1), this.{{.PriName}}))
+		logs.Debug(fmt.Sprintf(strings.Replace(sql{{.Name}}Delete, "?", "%v", -1), this.{{.PriName}}))
 	}
 	_, err = mysqlDB.Exec(sql{{.Name}}Delete, this.{{.PriName}})
 	return err
