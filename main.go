@@ -156,9 +156,13 @@ func transferType(str string) string {
 	t := mc.FindStringSubmatch(str)[0]
 	s := ""
 	switch t {
-	case "tinyint", "int", "bigint":
+	case "tinyint", "int":
 		s = "int"
-	case "float", "double", "decimal":
+	case "bigint":
+		s = "int64"
+	case "float", "decimal":
+		s = "float32"
+	case "double":
 		s = "float64"
 	case "timestamp", "datetime":
 		s = "time.Time"
