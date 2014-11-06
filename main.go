@@ -120,6 +120,7 @@ func main() {
 		data["fieldNames"] = fieldNames
 		data["FieldNames"] = FieldNames
 		data["count"] = len(fieldNames)
+		data["priCount"] = len(FieldPriNames)
 		err = template.Execute(files[name], data)
 		if err != nil {
 			log.Printf("template.Execute() error(%v)", err)
