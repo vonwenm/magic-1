@@ -41,7 +41,10 @@ func (this *{{.Name}}) GetList(index, limit int) ([]*{{.Name}}, error) {
 	list := make([]*{{.Name}}, 0)
 	for rows.Next() {
 		m := {{.Name}}{}
-		rows.Scan({{fill .FieldPriNames "&m." ""}})
+		err = rows.Scan({{fill .FieldPriNames "&m." ""}})
+		if err != nil {
+        	return
+        }
 		list = append(list, &m)
 	}
 	return list, err
