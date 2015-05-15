@@ -1,18 +1,18 @@
-package model
+package dao
 
 import (
 	"fmt"
 	"demo/config"
 	"strings"
-	"time"
 	"github.com/yzw/logs"
+	"demo/model"
 )
 
 const (
 	tb{{.Name}}       = "{{.name}}"
-	sql{{.Name}}Get       = "SELECT {{fill .fieldPriNames "" ""}} from `" + tb{{.Name}} + "` WHERE {{.priName}}=?"
-	sql{{.Name}}GetList   = "SELECT {{fill .fieldPriNames "" ""}} from `" + tb{{.Name}} + "` LIMIT ?, ?"
-	sql{{.Name}}Insert    = "INSERT INTO `" + tb{{.Name}} + "` ({{fill .fieldNames "" ""}}) VALUES ({{genNumStr .count "?" ", "}})"
+	sql{{.Name}}Get       = "SELECT {{fill .fieldPriNames "" ""}} FROM `" + tb{{.Name}} + "` WHERE {{.priName}}=?"
+	sql{{.Name}}GetList   = "SELECT {{fill .fieldPriNames "" ""}} FROM `" + tb{{.Name}} + "` LIMIT ?, ?"
+	sql{{.Name}}Insert    = "INSERT INTO `" + tb{{.Name}} + "` ({{fill .fieldPriNames "" ""}}) VALUES ({{genNumStr .priCount "?" ", "}})"
 	sql{{.Name}}Update    = "UPDATE `" + tb{{.Name}} + "` SET {{fill .fieldNames "" "=?"}} WHERE {{.priName}}=?"
 	sql{{.Name}}Delete    = "DELETE FROM  `" + tb{{.Name}} + "` WHERE {{.priName}}=?"
 )
@@ -21,55 +21,67 @@ type {{.Name}} struct {
 {{range .fields}}    {{.fName}} {{.fType}} {{.sep}}{{end}}
 }
 
-func (this *{{.Name}}) Get({{.priName}} {{.priType}}) error {
+type {{.Name}}Dao struct {
+}
+
+func New{{.Name}}Dao() *{{.Name}}Dao {
+	return &{{.Name}}Dao{}
+}
+
+func (this *{{.Name}}Dao) Get({{.priName}} {{.priType}}) (m *model.{{.Name}}, err error) {
 	if config.AppConfig.Debug {
 		logs.Debug(fmt.Sprintf(strings.Replace(sql{{.Name}}Get, "?", "%v", -1), {{.priName}}))
 	}
+	m = &model.{{.Name}}{}
 	row := mysqlDB.QueryRow(sql{{.Name}}Get, {{.priName}})
-	err = row.Scan({{fill .FieldPriNames "&this." ""}})
-	return err
+	err = row.Scan({{fill .FieldPriNames "&m." ""}})
+	return
 }
 
-func (this *{{.Name}}) GetList(index, limit int) ([]*{{.Name}}, error) {
+func (this *{{.Name}}Dao) GetList(index, limit int) (l []*model.{{.Name}}, err error) {
 	if config.AppConfig.Debug {
 		logs.Debug(fmt.Sprintf(strings.Replace(sql{{.Name}}GetList, "?", "%v", -1), index, limit))
 	}
 	rows, err := mysqlDB.Query(sql{{.Name}}GetList, index, limit)
 	if err != nil {
-		return nil, err
+		return
 	}
-	list := make([]*{{.Name}}, 0)
+	l = make([]*model.{{.Name}}, 0)
 	for rows.Next() {
-		m := {{.Name}}{}
+		m := model.{{.Name}}{}
 		err = rows.Scan({{fill .FieldPriNames "&m." ""}})
 		if err != nil {
         	return
         }
-		list = append(list, &m)
+		l = append(l, &m)
 	}
-	return list, err
+	return
 }
 
-func (this *{{.Name}}) Insert() error {
-	if config.AppConfig.Debug {
-		logs.Debug(fmt.Sprintf(strings.Replace(sql{{.Name}}Insert, "?", "%v", -1), {{fill .FieldNames "this." ""}}))
+func (this *{{.Name}}Dao) Insert(m *model.{{.Name}}) (err error) {
+	m.Id, err = GetId()
+	if err != nil {
+		return
 	}
-	_, err = mysqlDB.Exec(sql{{.Name}}Insert, {{fill .FieldNames "this." ""}})
-	return err
+	if config.AppConfig.Debug {
+		logs.Debug(fmt.Sprintf(strings.Replace(sql{{.Name}}Insert, "?", "%v", -1), {{fill .FieldPriNames "m." ""}}))
+	}
+	_, err = mysqlDB.Exec(sql{{.Name}}Insert, {{fill .FieldPriNames "m." ""}})
+	return
 }
 
-func (this *{{.Name}}) Update() error {
+func (this *{{.Name}}Dao) Update(m *model.{{.Name}}) (err error) {
 	if config.AppConfig.Debug {
-		logs.Debug(fmt.Sprintf(strings.Replace(sql{{.Name}}Update, "?", "%v", -1), {{fill .FieldNames "this." ""}}, this.{{.PriName}}))
+		logs.Debug(fmt.Sprintf(strings.Replace(sql{{.Name}}Update, "?", "%v", -1), {{fill .FieldNames "m." ""}}, m.{{.PriName}}))
 	}
-	_, err = mysqlDB.Exec(sql{{.Name}}Update, {{fill .FieldNames "this." ""}}, this.{{.PriName}})
-	return err
+	_, err = mysqlDB.Exec(sql{{.Name}}Update, {{fill .FieldNames "m." ""}}, m.{{.PriName}})
+	return
 }
 
-func (this *{{.Name}}) Delete() error {
+func (this *{{.Name}}Dao) Delete(id {{.priType}}) (err error) {
 	if config.AppConfig.Debug {
-		logs.Debug(fmt.Sprintf(strings.Replace(sql{{.Name}}Delete, "?", "%v", -1), this.{{.PriName}}))
+		logs.Debug(fmt.Sprintf(strings.Replace(sql{{.Name}}Delete, "?", "%v", -1), id))
 	}
-	_, err = mysqlDB.Exec(sql{{.Name}}Delete, this.{{.PriName}})
-	return err
+	_, err = mysqlDB.Exec(sql{{.Name}}Delete, id)
+	return
 }
